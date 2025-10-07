@@ -1,14 +1,17 @@
 int[][] grid = new int[9][9];
 boolean[][] fixed = new boolean[9][9];
+int[][] solution = new int[9][9]; 
 int selectedRow = -1, selectedCol = -1;
+boolean showCheck = false;
+boolean[][] correct = new boolean[9][9];
 
 int btnSize = 50;
 int btnMargin = 10;
 int padY;
-int state = 0; 
+int state = 0;
 
 void setup() {
-  size(600, 760);
+  fullScreen();
   textAlign(CENTER, CENTER);
   textSize(32);
   generatePuzzle();
@@ -26,7 +29,7 @@ void draw() {
 }
 
 void drawStartScreen() {
-  background(250);
+  background(240);
   fill(0);
   textSize(50);
   text("SUDOKU", width/2, height/2 - 100);
@@ -59,11 +62,15 @@ void draw_table() {
 }
 
 void show_grid() {
+  textSize(32);
   for (int r = 0; r < 9; r++) {
     for (int c = 0; c < 9; c++) {
       if (grid[r][c] != 0) {
         if (fixed[r][c]) fill(0);
-        else fill(0, 0, 200);
+        else if (showCheck) {
+          if (correct[r][c]) fill(0, 180, 0); 
+          else fill(255, 0, 0);                 
+        } else fill(0, 0, 200);               
         text(grid[r][c], c * 600 / 9 + 600 / 18, r * 600 / 9 + 600 / 18);
       }
     }
@@ -91,12 +98,20 @@ void drawButtons() {
     text(i + 1, x + btnSize / 2, y + btnSize / 2);
   }
   
-  int delX = width / 2 - btnSize / 2;
+  int delX = width / 2 - btnSize -10;
   int delY = padY + btnSize + 15;
   fill(255, 150, 150);
   rect(delX, delY, btnSize, btnSize, 10);
   fill(0);
   text("❌", delX + btnSize / 2, delY + btnSize / 2);
+  
+  int finX = width / 2 + 10;
+  int finY = delY ;
+  fill(0, 200, 100);
+  rect(finX, finY, btnSize * 2, btnSize, 10);
+  fill(255);
+  textSize(24);
+  text("CHECK", finX + btnSize, finY + btnSize / 2);
 }
 
 void mousePressed() {
@@ -105,7 +120,7 @@ void mousePressed() {
     int x = width/2 - w/2;
     int y = height/2 + 50;
     if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
-      state = 1; 
+      state = 1;
     }
   } else if (state == 1) {
     if (mouseY < 600) {
@@ -128,25 +143,43 @@ void checkButtonsClick() {
     }
   }
 
-  int delX = width / 2 - btnSize / 2;
+  int delX = width / 2 - btnSize - 10;
   int delY = padY + btnSize + 15;
   if (mouseX > delX && mouseX < delX + btnSize && mouseY > delY && mouseY < delY + btnSize) {
     handleDelete();
+    return;
+  }
+
+  int finX = width /2 + 10;
+  int finY = delY;
+  if (mouseX > width/2 - 80 && mouseX < width/2 + 80 && mouseY > finY && mouseY < finY + 60) {
+    checkAnswers();
   }
 }
 
 void handleNumberClick(int num) {
   if (selectedRow == -1 || selectedCol == -1) return;
   if (fixed[selectedRow][selectedCol]) return;
-  if (check_rule(grid, selectedRow, selectedCol, num)) {
-    grid[selectedRow][selectedCol] = num;
-  }
+  grid[selectedRow][selectedCol] = num;
+  showCheck = false;
 }
 
 void handleDelete() {
   if (selectedRow == -1 || selectedCol == -1) return;
   if (fixed[selectedRow][selectedCol]) return;
   grid[selectedRow][selectedCol] = 0;
+  showCheck = false;
+}
+
+void checkAnswers() {
+  showCheck = true;
+  for (int r = 0; r < 9; r++) {
+    for (int c = 0; c < 9; c++) {
+      if (!fixed[r][c] && grid[r][c] != 0) {
+        correct[r][c] = (grid[r][c] == solution[r][c]);
+      }
+    }
+  }
 }
 
 boolean check_rule(int[][] board, int row, int col, int number) {
@@ -154,7 +187,6 @@ boolean check_rule(int[][] board, int row, int col, int number) {
     if (board[row][i] == number && i != col) return false;
     if (board[i][col] == number && i != row) return false;
   }
-
   int box_start_row = (row / 3) * 3;
   int box_start_col = (col / 3) * 3;
   for (int i = 0; i < 3; i++) {
@@ -179,9 +211,23 @@ void generatePuzzle() {
     {0,0,0, 4,1,9, 0,0,5},
     {0,0,0, 0,8,0, 0,7,9}
   };
+
+  int[][] solved = {
+    {5,3,4, 6,7,8, 9,1,2},
+    {6,7,2, 1,9,5, 3,4,8},
+    {1,9,8, 3,4,2, 5,6,7},
+    {8,5,9, 7,6,1, 4,2,3},
+    {4,2,6, 8,5,3, 7,9,1},
+    {7,1,3, 9,2,4, 8,5,6},
+    {9,6,1, 5,3,7, 2,8,4},
+    {2,8,7, 4,1,9, 6,3,5},
+    {3,4,5, 2,8,6, 1,7,9}
+  };
+
   for (int r = 0; r < 9; r++) {
     for (int c = 0; c < 9; c++) {
       grid[r][c] = sample[r][c];
+      solution[r][c] = solved[r][c];
       if (grid[r][c] != 0) fixed[r][c] = true;
     }
   }
