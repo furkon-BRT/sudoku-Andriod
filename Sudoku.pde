@@ -4,18 +4,44 @@ int selectedRow = -1, selectedCol = -1;
 
 int btnSize = 50;
 int btnMargin = 10;
-int padY; 
+int padY;
+int state = 0; 
 
 void setup() {
   size(600, 760);
   textAlign(CENTER, CENTER);
   textSize(32);
   generatePuzzle();
-  padY = 620; 
+  padY = 620;
 }
 
 void draw() {
   background(255);
+  
+  if (state == 0) {
+    drawStartScreen();
+  } else if (state == 1) {
+    drawGameScreen();
+  }
+}
+
+void drawStartScreen() {
+  background(250);
+  fill(0);
+  textSize(50);
+  text("SUDOKU", width/2, height/2 - 100);
+
+  int w = 200, h = 70;
+  int x = width/2 - w/2;
+  int y = height/2 + 50;
+  fill(0, 180, 255);
+  rect(x, y, w, h, 20);
+  fill(255);
+  textSize(30);
+  text("START", width/2, y + h/2);
+}
+
+void drawGameScreen() {
   draw_table();
   show_grid();
   highlightSelected();
@@ -64,7 +90,7 @@ void drawButtons() {
     fill(0);
     text(i + 1, x + btnSize / 2, y + btnSize / 2);
   }
-
+  
   int delX = width / 2 - btnSize / 2;
   int delY = padY + btnSize + 15;
   fill(255, 150, 150);
@@ -74,36 +100,46 @@ void drawButtons() {
 }
 
 void mousePressed() {
-  if (mouseY < 600) {
-    selectedRow = int(mouseY / (600 / 9));
-    selectedCol = int(mouseX / (600 / 9));
-  } else {
-    int startX = (width - (9 * btnSize + 8 * btnMargin)) / 2;
-    int y = padY;
-    for (int i = 0; i < 9; i++) {
-      int x = startX + i * (btnSize + btnMargin);
-      if (mouseX > x && mouseX < x + btnSize && mouseY > y && mouseY < y + btnSize) {
-        handleNumberClick(i + 1);
-        return;
-      }
+  if (state == 0) {
+    int w = 200, h = 70;
+    int x = width/2 - w/2;
+    int y = height/2 + 50;
+    if (mouseX > x && mouseX < x + w && mouseY > y && mouseY < y + h) {
+      state = 1; 
     }
+  } else if (state == 1) {
+    if (mouseY < 600) {
+      selectedRow = int(mouseY / (600 / 9));
+      selectedCol = int(mouseX / (600 / 9));
+    } else {
+      checkButtonsClick();
+    }
+  }
+}
 
-    int delX = width / 2 - btnSize / 2;
-    int delY = padY + btnSize + 15;
-    if (mouseX > delX && mouseX < delX + btnSize && mouseY > delY && mouseY < delY + btnSize) {
-      handleDelete();
+void checkButtonsClick() {
+  int startX = (width - (9 * btnSize + 8 * btnMargin)) / 2;
+  int y = padY;
+  for (int i = 0; i < 9; i++) {
+    int x = startX + i * (btnSize + btnMargin);
+    if (mouseX > x && mouseX < x + btnSize && mouseY > y && mouseY < y + btnSize) {
+      handleNumberClick(i + 1);
+      return;
     }
+  }
+
+  int delX = width / 2 - btnSize / 2;
+  int delY = padY + btnSize + 15;
+  if (mouseX > delX && mouseX < delX + btnSize && mouseY > delY && mouseY < delY + btnSize) {
+    handleDelete();
   }
 }
 
 void handleNumberClick(int num) {
   if (selectedRow == -1 || selectedCol == -1) return;
   if (fixed[selectedRow][selectedCol]) return;
-
   if (check_rule(grid, selectedRow, selectedCol, num)) {
     grid[selectedRow][selectedCol] = num;
-  } else {
-    println("ผิดกฎ Sudoku");
   }
 }
 
@@ -143,7 +179,6 @@ void generatePuzzle() {
     {0,0,0, 4,1,9, 0,0,5},
     {0,0,0, 0,8,0, 0,7,9}
   };
-
   for (int r = 0; r < 9; r++) {
     for (int c = 0; c < 9; c++) {
       grid[r][c] = sample[r][c];
