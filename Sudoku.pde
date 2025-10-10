@@ -11,7 +11,7 @@ int padY;
 int state = 0;
 
 void setup() {
-  fullScreen();
+  size(600,760);
   textAlign(CENTER, CENTER);
   textSize(32);
   generatePuzzle();
@@ -37,11 +37,11 @@ void drawStartScreen() {
   int w = 200, h = 70;
   int x = width/2 - w/2;
   int y = height/2 + 50;
-  fill(0, 180, 255);
+  fill(240);
   rect(x, y, w, h, 20);
-  fill(255);
+  fill(0);
   textSize(30);
-  text("START", width/2, y + h/2);
+  text("NEW GAME", width/2, y + h/2);
 }
 
 void drawGameScreen() {
@@ -60,27 +60,40 @@ void draw_table() {
     line(i * 600 / 9, 0, i * 600 / 9, 600);
   }
 }
-
 void show_grid() {
   textSize(32);
   for (int r = 0; r < 9; r++) {
     for (int c = 0; c < 9; c++) {
+      float cellX = c * 600 / 9;
+      float cellY = r * 600 / 9;
+      float cellSize = 600 / 9;
+      if (fixed[r][c]) {
+        fill(200, 220, 255);
+        stroke(0);
+        rect(cellX, cellY, cellSize, cellSize);
+      }
+      else if (grid[r][c] != 0) {
+        if (showCheck) {
+          if (correct[r][c]) fill(180, 255, 180);  
+          else fill(255, 180, 180);
+          noStroke();
+          rect(cellX, cellY, cellSize, cellSize);
+        }
+      }
       if (grid[r][c] != 0) {
-        if (fixed[r][c]) fill(0);
-        else if (showCheck) {
-          if (correct[r][c]) fill(0, 180, 0); 
-          else fill(255, 0, 0);                 
-        } else fill(0, 0, 200);               
-        text(grid[r][c], c * 600 / 9 + 600 / 18, r * 600 / 9 + 600 / 18);
+        if (fixed[r][c]) fill(0);   
+        else fill(0);               
+        text(grid[r][c], cellX + cellSize / 2, cellY + cellSize / 2);
       }
     }
   }
 }
 
+
 void highlightSelected() {
   if (selectedRow != -1 && selectedCol != -1) {
-    noFill();
-    stroke(255, 0, 0);
+    fill(240,240,240,100);
+    stroke(0);
     strokeWeight(3);
     rect(selectedCol * 600 / 9, selectedRow * 600 / 9, 600 / 9, 600 / 9);
   }
@@ -104,14 +117,6 @@ void drawButtons() {
   rect(delX, delY, btnSize, btnSize, 10);
   fill(0);
   text("❌", delX + btnSize / 2, delY + btnSize / 2);
-  
-  int finX = width / 2 + 10;
-  int finY = delY ;
-  fill(0, 200, 100);
-  rect(finX, finY, btnSize * 2, btnSize, 10);
-  fill(255);
-  textSize(24);
-  text("CHECK", finX + btnSize, finY + btnSize / 2);
 }
 
 void mousePressed() {
@@ -149,19 +154,14 @@ void checkButtonsClick() {
     handleDelete();
     return;
   }
-
-  int finX = width /2 + 10;
-  int finY = delY;
-  if (mouseX > width/2 - 80 && mouseX < width/2 + 80 && mouseY > finY && mouseY < finY + 60) {
-    checkAnswers();
-  }
 }
 
 void handleNumberClick(int num) {
   if (selectedRow == -1 || selectedCol == -1) return;
   if (fixed[selectedRow][selectedCol]) return;
   grid[selectedRow][selectedCol] = num;
-  showCheck = false;
+  showCheck = true;
+  checkAnswers();
 }
 
 void handleDelete() {
